@@ -47,20 +47,24 @@ def dashboard(request):
 
 
 
+from django.urls import reverse
+
 @login_required
 def generate_qr(request, section_time_id):
     """
-    Генерация динамического QR-кода для секции, действующего в течение 10 секунд.
+    Генерация динамического QR-кода для секции.
     """
     section_time = get_object_or_404(SectionTime, id=section_time_id)
 
     # Уникальный токен для QR-кода
     token = str(uuid.uuid4())
     valid_from = timezone.now()
-    valid_until = valid_from + timedelta(seconds=10)
+    valid_until = valid_from + timedelta(seconds=30)
 
-    # Генерация данных для QR-кода
-    qr_data = f"https://example.com/scan_qr/{token}/{section_time.id}"  # Замените на ваш домен
+    # Генерация URL для QR-кода
+    qr_data = request.build_absolute_uri(
+        reverse('scan_qr', args=[token, section_time_id])
+    )
     qr_img = qrcode.make(qr_data)
 
     # Сохранение QR-кода в базе данных

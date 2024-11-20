@@ -8,6 +8,19 @@ from django.http import HttpResponse
 from django.utils import timezone
 from datetime import timedelta
 import uuid
+from django.http import HttpResponseRedirect
+from django.contrib.auth.views import LoginView
+
+class CustomLoginView(LoginView):
+    """
+    Переопределенный LoginView для перенаправления на сохраненный URL после авторизации.
+    """
+    def get_success_url(self):
+        # Получаем URL, сохраненный перед авторизацией
+        redirect_url = self.request.session.pop('post_login_redirect', None)
+        # Если URL отсутствует, используем стандартный
+        return redirect_url or super().get_success_url()
+
 
 CustomUser = get_user_model()  # Получаем текущую модель пользователя
 
@@ -83,7 +96,7 @@ def generate_qr(request, section_time_id):
 @login_required
 def scan_qr(request, token, section_time_id):
     """
-    Сканирование QR-кода студентом для отметки посещаемости.
+    Обработка сканирования QR-кода для фиксации посещаемости.
     """
     try:
         qr_code = QRCode.objects.get(
@@ -92,15 +105,24 @@ def scan_qr(request, token, section_time_id):
             valid_until__gte=timezone.now()
         )
     except QRCode.DoesNotExist:
-        return HttpResponse("QR-код недействителен или время его действия истекло")
+        return HttpResponse("QR-код недействителен или время его действия истекло.")
 
-    # Запись посещаемости
-    Attendance.objects.create(
-        student=request.user,
-        section_time=qr_code.section_time,
-        qr_code=qr_code
-    )
-    return redirect('dashboard')
+    # Если пользователь не авторизован
+    if not request.user.is_authenticated:
+        # Сохраняем URL, куда он должен вернуться после авторизации
+        request.session['post_login_redirect'] = request.path
+        return HttpResponseRedirect(reverse('login'))
+
+    # Если пользователь авторизован, проверяем, записан ли он на секцию
+    if StudentSectionTime.objects.filter(student=request.user, section_time=qr_code.section_time).exists():
+        Attendance.objects.get_or_create(
+            student=request.user,
+            section_time=qr_code.section_time,
+            qr_code=qr_code
+        )
+        return HttpResponseRedirect(reverse('dashboard'))
+    else:
+        return HttpResponse("Вы не записаны на эту секцию.")
 
 
 @login_required

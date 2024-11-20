@@ -1,4 +1,5 @@
 {% extends 'attendance/base.html' %}
+
 {% block title %}Сканировать QR{% endblock %}
 
 {% block content %}
@@ -8,7 +9,7 @@
 
     <div class="text-center my-5">
         <h4>Сканируйте QR-код</h4>
-        <p>Нажмите кнопку ниже, чтобы открыть камеру для сканирования QR-кода.</p>
+        <p>Нажмите кнопку ниже, чтобы открыть камеру для сканирования.</p>
         <button id="start-camera" class="btn btn-primary">Открыть камеру</button>
 
         <!-- Контейнер для сканера QR-кода -->
@@ -22,17 +23,22 @@
 
 <script>
     document.getElementById("start-camera").addEventListener("click", function () {
+        // Показываем сканер
         document.getElementById("reader").style.display = "block";
 
+        // Скрываем кнопку
         this.style.display = "none";
 
+        // Инициализация сканера
         const html5QrcodeScanner = new Html5QrcodeScanner(
             "reader", { fps: 10, qrbox: 250 }
         );
 
+        // Обработка успешного сканирования
         html5QrcodeScanner.render(function onScanSuccess(decodedText) {
             document.getElementById('scan-result').innerHTML = `Код найден: ${decodedText}`;
 
+            // Перенаправление на URL из QR-кода
             window.location.href = decodedText;
         });
     });

@@ -1,0 +1,46 @@
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+Knujsl5+5hb7xM9s1T4lcTJpXKjfiT7eQMaFt7bTN8OKhp" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeo7Wj1tXtFHL5ljz5N+p1FjkP4lClgXG6fB5pHRtp4OmB3" crossorigin="anonymous"></script>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'dashboard' %}">CRM Посещаемость</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'add_student' %}">Добавить студента</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'mark_attendance' %}">Отметить посещаемость</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'view_attendance' %}">Посмотреть посещаемость</a>
+        </li>
+      </ul>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="btn btn-outline-danger" type="submit">Выйти</button>
+      </form>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Добро пожаловать, {{ user.username }}</h1>
+    <div class="container border rounded p-4">
+        <div class="row">
+            {% for student in students %}
+            <div class="col-md-4">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ student.name }}</h5>
+                        <p class="card-text">{{ student.email }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

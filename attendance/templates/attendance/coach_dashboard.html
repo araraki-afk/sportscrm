@@ -1,0 +1,22 @@
+{% extends 'attendance/base.html' %}
+
+{% block title %}Dashboard - Coach{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Ваши секции</h1>
+    <div class="row">
+        {% for section_time in section_times %}
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ section_time.section.name }}</h5>
+                    <p class="card-text">Время: {{ section_time.start_time }} - {{ section_time.end_time }}</p>
+                    <a href="{% url 'section_detail' section_time.id %}" class="btn btn-primary">Посмотреть секцию</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

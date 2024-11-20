@@ -1,0 +1,47 @@
+{% extends 'attendance/base.html' %}
+
+{% block title %}{{ section_time.section.name }} - Attendance{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">{{ section_time.section.name }}</h1>
+    <h3 class="text-center">Время: {{ section_time.start_time }} - {{ section_time.end_time }}</h3>
+    
+    <!-- QR-код -->
+    <div class="text-center my-4">
+        <h4>Сканируйте QR-код для отметки посещаемости</h4>
+        <img src="{% url 'generate_qr' section_time.id %}" alt="QR Code" class="img-fluid">
+    </div>
+
+    <!-- Таблица посещаемости -->
+    <div class="table-responsive">
+        <h4 class="mt-5">Студенты, зарегистрированные на секцию</h4>
+        <table class="table table-bordered">
+            <thead class="table-primary">
+                <tr>
+                    <th>Имя студента</th>
+                    <th>Дата</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attendance in attendance_records %}
+                <tr>
+                    <td>{{ attendance.student.username }}</td>
+                    <td>{{ attendance.date_scanned|date:"d.m.Y H:i" }}</td>
+                    <td>
+                        <span class="badge {% if attendance.qr_code %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if attendance.qr_code %}Присутствовал{% else %}Отсутствовал{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center">Пока нет записей о посещении</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

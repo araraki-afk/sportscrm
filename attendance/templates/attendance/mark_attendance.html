@@ -1,0 +1,31 @@
+{% extends 'attendance/base.html' %}
+
+{% block title %}Mark Attendance{% endblock %}
+
+{% block content %}
+<h1 class="text-center">Mark Attendance for {{ section_time.section.name }} ({{ section_time.start_time }} - {{ section_time.end_time }})</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="date" class="form-label">Date</label>
+        <input type="date" id="date" name="date" class="form-control" required>
+    </div>
+
+    <h3 class="mt-5">Students</h3>
+    <div class="list-group">
+        {% for student in students %}
+        <div class="list-group-item">
+            <label for="present_{{ student.id }}">
+                {{ student.username }}
+                <input type="checkbox" name="present_{{ student.id }}" id="present_{{ student.id }}" class="form-check-input" />
+                Present
+            </label>
+        </div>
+        {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-4">Save Attendance</button>
+</form>
+
+{% endblock %}

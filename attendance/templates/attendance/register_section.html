@@ -1,0 +1,22 @@
+{% extends 'attendance/base.html' %}
+
+{% block title %}Register for Section{% endblock %}
+
+{% block content %}
+<h1 class="text-center">Register for a Section</h1>
+
+<form method="post" class="mt-4">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="section_time" class="form-label">Choose a Section and Time</label>
+        <select name="section_time" id="section_time" class="form-select">
+            {% for section_time in section_times %}
+            <option value="{{ section_time.id }}">
+                {{ section_time.section.name }} ({{ section_time.start_time }} - {{ section_time.end_time }})
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Register</button>
+</form>
+{% endblock %}

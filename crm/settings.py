@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-48!i+qz11fnk3x$^yo)p$pzeale6_08z2a-qssaj_g)%95$ka#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['sportscrm.onrender.com']
 
 
 # Application definition

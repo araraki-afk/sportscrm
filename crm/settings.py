@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'attendance',
+    "rest_framework",
+    "rest_framework_api_key",
 ]
 
 MIDDLEWARE = [
@@ -127,3 +129,9 @@ LOGIN_URL = '/login/'   # Указывает путь на вашу кастом
 LOGIN_REDIRECT_URL = 'dashboard'  # Перенаправление после входа
 LOGOUT_REDIRECT_URL = 'login'  # Перенаправление после выхода
 AUTH_USER_MODEL = 'attendance.CustomUser'
+
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework_api_key.permissions.HasAPIKey",
+    ]
+}

@@ -2,6 +2,24 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
 import uuid
 from django.utils.timezone import now
+import secrets
+from django.db import models
+
+
+class APIKey(models.Model):
+    name = models.CharField(max_length=255, unique=True)  # Название ключа (например, "Мобильное приложение")
+    key = models.CharField(max_length=64, unique=True, editable=False)  # Уникальный API-ключ
+    created_at = models.DateTimeField(auto_now_add=True)  # Дата создания
+    is_active = models.BooleanField(default=True)  # Возможность деактивации ключа
+
+    def save(self, *args, **kwargs):
+        if not self.key:  # Генерируем ключ только при первом создании
+            self.key = secrets.token_hex(32)  # Генерация безопасного ключа
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.name} ({'Активен' if self.is_active else 'Отключен'})"
+
 
 class CustomUser(AbstractUser):
     is_student = models.BooleanField(default=True)

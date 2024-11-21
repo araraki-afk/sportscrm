@@ -10,7 +10,7 @@
     <div class="text-center my-5">
         <h4>Сканируйте QR-код</h4>
         <p>Нажмите кнопку ниже, чтобы открыть камеру для сканирования.</p>
-        <button id="start-camera" class="btn btn-primary">Открыть камеру</button>
+        <button onclick="startCamera()" class="btn btn-primary">Открыть камеру</button>
 
         <!-- Контейнер для сканера QR-кода -->
         <div id="reader" style="display: none; width: 100%; max-width: 500px; margin: 20px auto;"></div>
@@ -22,25 +22,44 @@
 <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
 
 <script>
-    document.getElementById("start-camera").addEventListener("click", function () {
+    // Функция для старта камеры
+    function startCamera() {
         // Показываем сканер
-        document.getElementById("reader").style.display = "block";
-
-        // Скрываем кнопку
-        this.style.display = "none";
+        const reader = document.getElementById("reader");
+        reader.style.display = "block";
 
         // Инициализация сканера
-        const html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader", { fps: 10, qrbox: 250 }
-        );
+        const html5QrCode = new Html5Qrcode("reader");
 
-        // Обработка успешного сканирования
-        html5QrcodeScanner.render(function onScanSuccess(decodedText) {
-            document.getElementById('scan-result').innerHTML = `Код найден: ${decodedText}`;
+        // Получение списка камер
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length) {
+                // Автоматический выбор задней камеры (если доступна)
+                const backCamera = devices.find(device =>
+                    device.label.toLowerCase().includes("back") || device.label.toLowerCase().includes("rear")
+                );
 
-            // Перенаправление на URL из QR-кода
-            window.location.href = decodedText;
+                const cameraId = backCamera ? backCamera.id : devices[0].id;
+
+                // Запуск сканирования
+                html5QrCode.start(
+                    cameraId,
+                    { fps: 10, qrbox: 250 },
+                    decodedText => {
+                        document.getElementById('scan-result').innerHTML = `Код найден: ${decodedText}`;
+                        window.location.href = decodedText; // Перенаправление на URL
+                    },
+                    error => {
+                        console.warn(`Ошибка сканирования: ${error}`);
+                    }
+                );
+            } else {
+                alert("Камера не найдена!");
+            }
+        }).catch(err => {
+            console.error(`Ошибка получения камер: ${err}`);
+            alert("Не удалось получить доступ к камере.");
         });
-    });
+    }
 </script>
 {% endblock %}

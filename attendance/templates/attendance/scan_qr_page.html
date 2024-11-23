@@ -22,31 +22,41 @@
 </div>
 
 <!-- Подключаем библиотеку html5-qrcode -->
-<script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
 <script>
   const qrReader = new Html5Qrcode("qr-reader");
 
- const onScanSuccess = (decodedText) => {
-  console.log(`QR Code scanned: ${decodedText}`);
-  qrReader.stop().then(() => {
-    console.log("QR scanner stopped.");
-    toggleButtons(false);
-  }).catch((err) => {
-    console.warn("Failed to stop the scanner: ", err);
-  });
+  const onScanSuccess = (decodedText) => {
+    console.log(`QR Code scanned: ${decodedText}`);
+    qrReader.stop().then(() => {
+      console.log("QR scanner stopped.");
+      toggleButtons(false);
+    }).catch((err) => {
+      console.warn("Failed to stop the scanner: ", err);
+    });
 
-  const resultContainer = document.getElementById("scan-result");
-  resultContainer.textContent = `Scanned: ${decodedText}`;
-  resultContainer.style.display = "block";
-
-  const redirectButton = document.getElementById("redirect-button");
-  redirectButton.onclick = () => {
-    window.location.href = decodedText;
+    // Отправляем данные на сервер
+    fetch(decodedText, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}',
+      },
+      body: JSON.stringify({ scanned: true })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert("Посещение успешно зафиксировано!");
+      } else {
+        alert(data.message || "Ошибка при фиксации посещения.");
+      }
+    })
+    .catch(error => {
+      console.error("Error during attendance recording:", error);
+    });
   };
-  redirectButton.style.display = "block";
-};
 
   const onScanFailure = (error) => {
     console.warn(`QR scan failed: ${error}`);
@@ -90,4 +100,5 @@
     });
   });
 </script>
+
 {% endblock %}

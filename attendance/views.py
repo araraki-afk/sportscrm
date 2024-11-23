@@ -10,6 +10,7 @@ from datetime import timedelta
 import uuid
 from django.http import HttpResponseRedirect
 from django.contrib.auth.views import LoginView
+from django.http import JsonResponse
 
 class CustomLoginView(LoginView):
     """
@@ -93,6 +94,7 @@ def generate_qr(request, section_time_id):
     return response
 
 
+
 @login_required
 def scan_qr(request, token, section_time_id):
     """
@@ -105,24 +107,20 @@ def scan_qr(request, token, section_time_id):
             valid_until__gte=timezone.now()
         )
     except QRCode.DoesNotExist:
-        return HttpResponse("QR-код недействителен или время его действия истекло.")
+        return JsonResponse({"success": False, "message": "QR-код недействителен или время его действия истекло."}, status=400)
 
-    # Если пользователь не авторизован
-    if not request.user.is_authenticated:
-        # Сохраняем URL, куда он должен вернуться после авторизации
-        request.session['post_login_redirect'] = request.path
-        return HttpResponseRedirect(reverse('login'))
+    # Проверяем, что студент записан на секцию
+    if not StudentSectionTime.objects.filter(student=request.user, section_time=qr_code.section_time).exists():
+        return JsonResponse({"success": False, "message": "Вы не записаны на эту секцию."}, status=403)
 
-    # Если пользователь авторизован, проверяем, записан ли он на секцию
-    if StudentSectionTime.objects.filter(student=request.user, section_time=qr_code.section_time).exists():
-        Attendance.objects.get_or_create(
-            student=request.user,
-            section_time=qr_code.section_time,
-            qr_code=qr_code
-        )
-        return HttpResponseRedirect(reverse('dashboard'))
-    else:
-        return HttpResponse("Вы не записаны на эту секцию.")
+    # Создаем запись о посещении
+    attendance, created = Attendance.objects.get_or_create(
+        student=request.user,
+        section_time=qr_code.section_time,
+        qr_code=qr_code
+    )
+    return JsonResponse({"success": True, "message": "Посещение зафиксировано успешно."})
+
 
 
 @login_required
@@ -164,22 +162,22 @@ def register_section(request):
 @login_required
 def coach_dashboard(request):
     """
-    Отображение панели тренера, включающей секции и студентов.
+    Отображение панели тренера, включающей секции и посещаемость.
     """
     if request.user.is_coach:
         # Секции, которые ведет тренер
         section_times = SectionTime.objects.filter(section__coach=request.user)
 
-        # Список студентов, зарегистрированных на секции тренера
-        student_section_times = StudentSectionTime.objects.filter(section_time__in=section_times)
-        students = CustomUser.objects.filter(id__in=[sst.student.id for sst in student_section_times])
+        # Записи о посещаемости для секций тренера
+        attendance_records = Attendance.objects.filter(section_time__in=section_times)
 
         return render(request, 'attendance/coach_dashboard.html', {
             'section_times': section_times,
-            'students': students
+            'attendance_records': attendance_records
         })
     else:
         return redirect('dashboard')
+
 
 
 @login_required

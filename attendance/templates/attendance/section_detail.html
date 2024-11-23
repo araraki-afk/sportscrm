@@ -20,20 +20,16 @@
             <thead class="table-primary">
                 <tr>
                     <th>Имя студента</th>
-                    <th>Дата</th>
-                    <th>Статус</th>
+                    <th>Секция</th>
+                    <th>Дата посещения</th>
                 </tr>
             </thead>
             <tbody>
-                {% for attendance in attendance_records %}
+                {% for record in attendance_records %}
                 <tr>
-                    <td>{{ attendance.student.username }}</td>
-                    <td>{{ attendance.date_scanned|date:"d.m.Y H:i" }}</td>
-                    <td>
-                        <span class="badge {% if attendance.qr_code %}bg-success{% else %}bg-danger{% endif %}">
-                            {% if attendance.qr_code %}Присутствовал{% else %}Отсутствовал{% endif %}
-                        </span>
-                    </td>
+                    <td>{{ record.student.get_full_name }}</td>
+                    <td>{{ record.section_time.section.name }}</td>
+                    <td>{{ record.date_scanned|date:"d.m.Y H:i" }}</td>
                 </tr>
                 {% empty %}
                 <tr>

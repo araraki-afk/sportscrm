@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Section, SectionTime, StudentSectionTime, Attendance
+from .models import CustomUser, Section, SectionTime, StudentSectionTime, Attendance, QRCode
 from django.contrib import admin
 from .models import APIKey
 
@@ -24,3 +24,4 @@ admin.site.register(Section)
 admin.site.register(SectionTime)
 admin.site.register(StudentSectionTime)
 admin.site.register(Attendance)
+admin.site.register(QRCode)

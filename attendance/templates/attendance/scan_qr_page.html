@@ -7,59 +7,87 @@
     <h1 class="text-center">{{ section_time.section.name }}</h1>
     <h3 class="text-center">Время: {{ section_time.start_time }} - {{ section_time.end_time }}</h3>
 
-    <div class="text-center my-5">
-        <h4>Сканируйте QR-код</h4>
-        <p>Нажмите кнопку ниже, чтобы открыть камеру для сканирования.</p>
-        <button onclick="startCamera()" class="btn btn-primary">Открыть камеру</button>
+<div class="container mt-4">
+  <h2 class="text-center">Scan QR Code</h2>
+  <div class="d-flex justify-content-center gap-2">
+    <button id="start-scan" class="btn btn-primary">Start QR Code Scan</button>
+    <button id="stop-scan" class="btn btn-danger" style="display: none;">Stop QR Code Scan</button>
+  </div>
+  <div id="qr-reader" style="width: 100%; max-width: 500px; display: none;" class="mt-3 mx-auto"></div>
 
-        <!-- Контейнер для сканера QR-кода -->
-        <div id="reader" style="display: none; width: 100%; max-width: 500px; margin: 20px auto;"></div>
-        <p id="scan-result" class="mt-3 text-success"></p>
-    </div>
+  <div id="scan-result-container" class="text-center mt-3" style="display: none;">
+    <p id="scan-result" class="fw-bold"></p>
+    <button id="redirect-button" class="btn btn-success" style="display: none;">Go to Link</button>
+  </div>
 </div>
 
 <!-- Подключаем библиотеку html5-qrcode -->
 <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
 <script>
-    // Функция для старта камеры
-    function startCamera() {
-        // Показываем сканер
-        const reader = document.getElementById("reader");
-        reader.style.display = "block";
+  const qrReader = new Html5Qrcode("qr-reader");
 
-        // Инициализация сканера
-        const html5QrCode = new Html5Qrcode("reader");
+ const onScanSuccess = (decodedText) => {
+  console.log(`QR Code scanned: ${decodedText}`);
+  qrReader.stop().then(() => {
+    console.log("QR scanner stopped.");
+    toggleButtons(false);
+  }).catch((err) => {
+    console.warn("Failed to stop the scanner: ", err);
+  });
 
-        // Получение списка камер
-        Html5Qrcode.getCameras().then(devices => {
-            if (devices && devices.length) {
-                // Автоматический выбор задней камеры (если доступна)
-                const backCamera = devices.find(device =>
-                    device.label.toLowerCase().includes("back") || device.label.toLowerCase().includes("rear")
-                );
+  const resultContainer = document.getElementById("scan-result");
+  resultContainer.textContent = `Scanned: ${decodedText}`;
+  resultContainer.style.display = "block";
 
-                const cameraId = backCamera ? backCamera.id : devices[0].id;
+  const redirectButton = document.getElementById("redirect-button");
+  redirectButton.onclick = () => {
+    window.location.href = decodedText;
+  };
+  redirectButton.style.display = "block";
+};
 
-                // Запуск сканирования
-                html5QrCode.start(
-                    cameraId,
-                    { fps: 10, qrbox: 250 },
-                    decodedText => {
-                        document.getElementById('scan-result').innerHTML = `Код найден: ${decodedText}`;
-                        window.location.href = decodedText; // Перенаправление на URL
-                    },
-                    error => {
-                        console.warn(`Ошибка сканирования: ${error}`);
-                    }
-                );
-            } else {
-                alert("Камера не найдена!");
-            }
-        }).catch(err => {
-            console.error(`Ошибка получения камер: ${err}`);
-            alert("Не удалось получить доступ к камере.");
-        });
-    }
+  const onScanFailure = (error) => {
+    console.warn(`QR scan failed: ${error}`);
+  };
+
+  const toggleButtons = (scanning) => {
+    document.getElementById("start-scan").style.display = scanning ? "none" : "block";
+    document.getElementById("stop-scan").style.display = scanning ? "block" : "none";
+  };
+
+  document.getElementById("start-scan").addEventListener("click", () => {
+    const qrReaderContainer = document.getElementById("qr-reader");
+    qrReaderContainer.style.display = "block";
+
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    const qrBoxSize = Math.min(viewportWidth * 0.8, 250);
+
+    qrReader.start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: { width: qrBoxSize, height: qrBoxSize },
+      },
+      onScanSuccess,
+      onScanFailure
+    ).then(() => {
+      console.log("QR scanner started.");
+      toggleButtons(true);
+    }).catch((err) => {
+      console.error("Failed to start QR scanner: ", err);
+    });
+  });
+
+  document.getElementById("stop-scan").addEventListener("click", () => {
+    qrReader.stop().then(() => {
+      console.log("QR scanner stopped.");
+      document.getElementById("qr-reader").style.display = "none";
+      toggleButtons(false);
+    }).catch((err) => {
+      console.warn("Failed to stop the scanner: ", err);
+    });
+  });
 </script>
 {% endblock %}
